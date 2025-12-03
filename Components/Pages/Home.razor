@@ -1,0 +1,33 @@
+﻿@page "/"
+@using GameStore.Models
+@using GameStore.Services
+@inject GamesService GamesService
+
+<h3>Game Store</h3>
+
+@if (games == null)
+{
+    <p>Loading games...</p>
+}
+else
+{
+    <div class="game-container">
+        @foreach (var game in games)
+        {
+            <div class="game-card">
+                <img src="@game.CoverImageUrl" width="150" />
+                <h4>@game.Title</h4>
+                <p>@game.OriginalPrice.ToString("C")</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<Game>? games;
+
+    protected override async Task OnInitializedAsync()
+    {
+        games = await GamesService.GetGamesAsync();
+    }
+}

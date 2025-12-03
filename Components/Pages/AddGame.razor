@@ -1,0 +1,63 @@
+﻿@page "/add-game"
+@using GameStore.Models
+@using GameStore.Services
+@inject GamesService GamesService
+
+<h3>Add a New Game</h3>
+
+<div>
+    <label>Title:</label>
+    <input @bind="newGame.Title" />
+</div>
+
+<div>
+    <label>Platform:</label>
+    <input @bind="newGame.Platform" />
+</div>
+
+<div>
+    <label>Genre:</label>
+    <input @bind="newGame.Genre" />
+</div>
+
+<div>
+    <label>Description:</label>
+    <textarea @bind="newGame.Description"></textarea>
+</div>
+
+<div>
+    <label>Original Price:</label>
+    <input type="number" step="0.01" @bind="newGame.OriginalPrice" />
+</div>
+
+<div>
+    <label>Store Selling Price:</label>
+    <input type="number" step="0.01" @bind="newGame.Price" />
+</div>
+
+<button @onclick="Save">Add Game</button>
+
+@if (newGame.OriginalPrice > 0)
+{
+    <h4>Calculated Prices</h4>
+    <p>Very Good: @newGame.VeryGoodPrice.ToString("C")</p>
+    <p>Good: @newGame.GoodPrice.ToString("C")</p>
+    <p>Fair: @newGame.FairPrice.ToString("C")</p>
+    <p>Acceptable: @newGame.AcceptablePrice.ToString("C")</p>
+}
+
+@if (newGame.Price > 0)
+{
+    <h4>Trade-in Values</h4>
+    <p>Store Credit: @newGame.StoreCreditValue.ToString("C")</p>
+    <p>Cash: @newGame.CashValue.ToString("C")</p>
+}
+
+@code {
+    Game newGame = new Game();
+
+    private async Task Save()
+    {
+        await GamesService.AddGameAsync(newGame);
+    }
+}
