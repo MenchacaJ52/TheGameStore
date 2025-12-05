@@ -1,25 +1,41 @@
-﻿using GameStore.Services;
-using System.Net.NetworkInformation;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    public enum GameCondition
+    {
+        New = 0,
+        LikeNew = 1,
+        Good = 2,
+        Fair = 3,
+        Poor = 4
+    }
+
     public class Game
     {
+        [Key]
         public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Platform { get; set; } = "";
-        public string Genre { get; set; } = "";
-        public string Description { get; set; } = "";
-        public decimal Price { get; set; }
-        public decimal OriginalPrice { get; set; }
-        public decimal VeryGoodPrice => OriginalPrice * 0.75m;
-        public decimal GoodPrice => OriginalPrice * 0.65m;
-        public decimal FairPrice => OriginalPrice * 0.50m;
-        public decimal AcceptablePrice => OriginalPrice * 0.30m;
 
-        public decimal StoreCreditValue => Price * 0.40m;
-        public decimal CashValue => Price * 0.25m;
-        public string CoverImageUrl { get; set; } = "";
+        [Required, StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required, StringLength(100)]
+        public string Platform { get; set; } = string.Empty;
+
+        [Range(0.01, 9999)]
+        public decimal Price { get; set; }
+
+        [Required]
+        public GameCondition Condition { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required, StringLength(100)]
+        public string Genre { get; set; } = string.Empty;
+
+        [Required, StringLength(1000)]
+        public string Description { get; set; } = string.Empty;
     }
 }
+
