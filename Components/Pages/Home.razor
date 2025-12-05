@@ -1,9 +1,120 @@
-﻿@page "/"
+@page "/"
 @using GameStore.Models
 @using GameStore.Services
 @inject GamesService GamesService
 
-<h3>Game Store</h3>
+<h3>Games</h3>
+
+<style>
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px; /* a little closer */
+        margin-top: 12px;
+    }
+
+    .game-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 10px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .game-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #111;
+    }
+
+    .game-meta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 0.95rem;
+        color: #333;
+    }
+
+    .game-price {
+        font-weight: 600;
+        color: #0b5;
+    }
+
+    .game-genre {
+        color: #666;
+    }
+
+    .game-description {
+        font-size: 0.92rem;
+        color: #222;
+        margin-top: 6px;
+    }
+
+    .filters-row {
+        margin-top: 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    select { padding: 6px; }
+</style>
+
+<div>
+    <strong>Counts by condition</strong>
+    @if (counts == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var kv in counts)
+            {
+                <li>@kv.Key: @kv.Value</li>
+            }
+        </ul>
+    }
+</div>
+
+<div class="filters-row">
+    <label>Filter by condition</label>
+    <select @onchange="OnConditionChanged">
+        <option value="">All</option>
+        @foreach (var c in Enum.GetValues<GameCondition>())
+        {
+            <option value="@c">@c</option>
+        }
+    </select>
+
+    <label>Filter by platform</label>
+    <select @onchange="OnPlatformChanged">
+        <option value="">All</option>
+        @if (platforms != null)
+        {
+            @foreach (var p in platforms)
+            {
+                <option value="@p">@p</option>
+            }
+        }
+    </select>
+
+    <label>Sort</label>
+    <select @onchange="OnSortChanged">
+        <option value="">Default</option>
+        <option value="Condition">Condition</option>
+        <option value="Platform">Platform</option>
+        <option value="Title">Title</option>
+        <option value="PriceAsc">Price ↑</option>
+        <option value="PriceDesc">Price ↓</option>
+        <option value="CreatedAtAsc">Oldest</option>
+        <option value="CreatedAtDesc">Newest</option>
+    </select>
+</div>
 
 @if (games == null)
 {
@@ -11,13 +122,19 @@
 }
 else
 {
-    <div class="game-container">
-        @foreach (var game in games)
+    <div class="games-grid">
+        @foreach (var g in games)
         {
             <div class="game-card">
-                <img src="@game.CoverImageUrl" width="150" />
-                <h4>@game.Title</h4>
-                <p>@game.OriginalPrice.ToString("C")</p>
+                <div class="game-title">@g.Title</div>
+
+                <div class="game-meta">
+                    <div class="game-price">@g.Price.ToString("C")</div>
+                    <div class="game-genre">@g.Genre</div>
+                    <div style="margin-left:auto;color:#777;font-size:0.85rem">@g.Condition</div>
+                </div>
+
+                <div class="game-description">@g.Description</div>
             </div>
         }
     </div>
@@ -25,9 +142,51 @@ else
 
 @code {
     List<Game>? games;
+    Dictionary<GameCondition, int>? counts;
+    List<string>? platforms;
+
+    GameCondition? selectedCondition;
+    string? selectedPlatform;
+    string? selectedSort;
 
     protected override async Task OnInitializedAsync()
     {
-        games = await GamesService.GetGamesAsync();
+        counts = await GamesService.GetCountsByConditionAsync();
+        platforms = await GamesService.GetPlatformsAsync();
+        games = await GamesService.GetAllAsync();
+    }
+
+    private async Task OnConditionChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+        if (string.IsNullOrEmpty(val))
+        {
+            selectedCondition = null;
+        }
+        else if (Enum.TryParse<GameCondition>(val, out var cond))
+        {
+            selectedCondition = cond;
+        }
+
+        await UpdateGamesAsync();
+    }
+
+    private async Task OnPlatformChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+        selectedPlatform = string.IsNullOrEmpty(val) ? null : val;
+        await UpdateGamesAsync();
+    }
+
+    private async Task OnSortChanged(ChangeEventArgs e)
+    {
+        selectedSort = e.Value?.ToString();
+        await UpdateGamesAsync();
+    }
+
+    private async Task UpdateGamesAsync()
+    {
+        games = await GamesService.GetFilteredAsync(selectedCondition, selectedPlatform, selectedSort);
+        StateHasChanged();
     }
 }
