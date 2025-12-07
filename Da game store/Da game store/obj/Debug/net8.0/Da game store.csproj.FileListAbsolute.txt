@@ -1,0 +1,32 @@
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\appsettings.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.staticwebassets.runtime.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.staticwebassets.endpoints.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.exe
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.deps.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.runtimeconfig.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.dll
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\bin\Debug\net8.0\Da_game_store.pdb
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da game store.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da game store.AssemblyInfoInputs.cache
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da game store.AssemblyInfo.cs
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da game store.csproj.CoreCompileInputs.cache
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da_game_store.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\scopedcss\bundle\Da_game_store.styles.css
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\scopedcss\projectbundle\Da_game_store.bundle.scp.css
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\staticwebassets.development.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da_game_store.dll
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\refint\Da_game_store.dll
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da_game_store.pdb
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\Da game store.genruntimeconfig.cache
+C:\Users\kevin\source\repos\Webapps\Da game store\Da game store\obj\Debug\net8.0\ref\Da_game_store.dll

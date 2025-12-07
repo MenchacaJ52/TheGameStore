@@ -1,0 +1,85 @@
+﻿@using Da_game_store.Services
+@page "/"
+@inject CartService Cart
+@rendermode InteractiveServer
+
+<h3>Game Shop</h3>
+
+<div class="row">
+    <div class="col-8">
+        <h4>Available Games</h4>
+
+        @foreach (var game in games)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>@game.Name</h5>
+                    <p>Price: @game.Price.ToString("C")</p>
+
+                    <button class="btn btn-primary w-100"
+                            @onclick="() => AddToCart(game)">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-4">
+        <h4>Cart (@Cart.Items.Count)</h4>
+        <p>Total: @Cart.Total.ToString("C")</p>
+
+        @if (Cart.Items.Count == 0)
+        {
+            <p class="text-muted">Cart is empty</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var item in Cart.Items)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @item.Name
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="() => RemoveFromCart(item)">
+                            remove
+                        </button>
+                    </li>
+                }
+            </ul>
+
+            <button class="btn btn-warning w-100" @onclick="ClearCart">
+                Clear Cart
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    List<Game> games = new()
+    {
+        new Game { Name="Expedition 33", Price=59.99m },
+        new Game { Name="Scarlet Hollow", Price=14.99m },
+        new Game { Name="Persona 5", Price=49.99m }
+    };
+
+    void AddToCart(Game game)
+    {
+        Cart.Add(game);
+    }
+
+    void RemoveFromCart(Game game)
+    {
+        Cart.Remove(game);
+    }
+
+    void ClearCart()
+    {
+        Cart.Clear();
+    }
+
+    protected override void OnInitialized()
+    {
+        Cart.OnChange += () => InvokeAsync(StateHasChanged);
+    }
+}
