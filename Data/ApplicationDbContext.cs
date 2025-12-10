@@ -15,5 +15,7 @@ namespace GameStore.Data
         public DbSet<Game> Games { get; set; }
         public DbSet<Listing> Listings { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<Card> Cards { get; set; }
+        public DbSet<Account> Accounts { get; set; }
     }
 }
