@@ -1,6 +1,7 @@
 using GameStore.Components;
 using GameStore.Data;
 using GameStore.Services;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,14 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddRazorComponents()
        .AddInteractiveServerComponents();
 builder.Services.AddScoped<GamesService>();
+// CartService depends on IJSRuntime, resolve per scope
+builder.Services.AddScoped<CartService>();
+builder.Services.AddScoped<CardsService>();
+
+
+// Add a simple service to track current user's local Account link
+builder.Services.AddScoped<CurrentUserService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -32,8 +41,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapRazorPages();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
