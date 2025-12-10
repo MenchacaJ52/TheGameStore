@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
@@ -38,4 +38,3 @@ namespace GameStore.Models
         public string Description { get; set; } = string.Empty;
     }
 }
-
