@@ -1,9 +1,13 @@
-@page "/"
+﻿@page "/home"
 @using GameStore.Models
 @using GameStore.Services
 @inject GamesService GamesService
+@inject CartService Cart
+@inject CurrentUserService CurrentUser
+@inject GameStore.Data.ApplicationDbContext Db
+@rendermode InteractiveServer
 
-<h3>Games</h3>
+<h3>Game Shop <span class="text-muted" style="font-weight:400; font-size:0.95rem; margin-left:8px;">welcome @WelcomeName</span></h3>
 
 <style>
     .games-grid {
@@ -81,64 +85,96 @@
     }
 </div>
 
-<div class="filters-row">
-    <label>Filter by condition</label>
-    <select @onchange="OnConditionChanged">
-        <option value="">All</option>
-        @foreach (var c in Enum.GetValues<GameCondition>())
+<div class="row">
+    <div class="col-8">
+        <div class="filters-row">
+            <label>Filter by condition</label>
+            <select @onchange="OnConditionChanged">
+                <option value="">All</option>
+                @foreach (var c in Enum.GetValues<GameCondition>())
+                {
+                    <option value="@c">@c</option>
+                }
+            </select>
+
+            <label>Filter by platform</label>
+            <select @onchange="OnPlatformChanged">
+                <option value="">All</option>
+                @if (platforms != null)
+                {
+                    @foreach (var p in platforms)
+                    {
+                        <option value="@p">@p</option>
+                    }
+                }
+            </select>
+
+            <label>Sort</label>
+            <select @onchange="OnSortChanged">
+                <option value="">Default</option>
+                <option value="Condition">Condition</option>
+                <option value="Platform">Platform</option>
+                <option value="Title">Title</option>
+                <option value="PriceAsc">Price ↑</option>
+                <option value="PriceDesc">Price ↓</option>
+                <option value="CreatedAtAsc">Oldest</option>
+                <option value="CreatedAtDesc">Newest</option>
+            </select>
+        </div>
+
+        @if (games == null)
         {
-            <option value="@c">@c</option>
+            <p>Loading games...</p>
         }
-    </select>
-
-    <label>Filter by platform</label>
-    <select @onchange="OnPlatformChanged">
-        <option value="">All</option>
-        @if (platforms != null)
+        else
         {
-            @foreach (var p in platforms)
-            {
-                <option value="@p">@p</option>
-            }
-        }
-    </select>
+            <div class="games-grid">
+                @foreach (var g in games)
+                {
+                    <div class="game-card">
+                        <div class="game-title">@g.Title</div>
 
-    <label>Sort</label>
-    <select @onchange="OnSortChanged">
-        <option value="">Default</option>
-        <option value="Condition">Condition</option>
-        <option value="Platform">Platform</option>
-        <option value="Title">Title</option>
-        <option value="PriceAsc">Price ↑</option>
-        <option value="PriceDesc">Price ↓</option>
-        <option value="CreatedAtAsc">Oldest</option>
-        <option value="CreatedAtDesc">Newest</option>
-    </select>
-</div>
+                        <div class="game-meta">
+                            <div class="game-price">@g.Price.ToString("C")</div>
+                            <div class="game-genre">@g.Genre</div>
+                            <div style="margin-left:auto;color:#777;font-size:0.85rem">@g.Condition</div>
+                        </div>
 
-@if (games == null)
-{
-    <p>Loading games...</p>
-}
-else
-{
-    <div class="games-grid">
-        @foreach (var g in games)
-        {
-            <div class="game-card">
-                <div class="game-title">@g.Title</div>
+                        <div class="game-description">@g.Description</div>
 
-                <div class="game-meta">
-                    <div class="game-price">@g.Price.ToString("C")</div>
-                    <div class="game-genre">@g.Genre</div>
-                    <div style="margin-left:auto;color:#777;font-size:0.85rem">@g.Condition</div>
-                </div>
-
-                <div class="game-description">@g.Description</div>
+                        <button class="btn btn-primary mt-2" @onclick="() => AddToCart(g)">Add to Cart</button>
+                    </div>
+                }
             </div>
         }
     </div>
-}
+
+    <div class="col-4">
+        <h4>Cart (@Cart.Items.Count)</h4>
+        <p>Total: @Cart.Total.ToString("C")</p>
+
+        @if (Cart.Items.Count == 0)
+        {
+            <p class="text-muted">Cart is empty</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var item in Cart.Items)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        @item.Title
+                        <button class="btn btn-sm btn-danger" @onclick="() => RemoveFromCart(item)">remove</button>
+                    </li>
+                }
+            </ul>
+
+            <a class="btn btn-success w-100" href="/checkout">Checkout</a>
+
+            <button class="btn btn-warning w-100 mt-2" @onclick="ClearCart">Clear Cart</button>
+        }
+    </div>
+</div>
 
 @code {
     List<Game>? games;
@@ -149,11 +185,41 @@ else
     string? selectedPlatform;
     string? selectedSort;
 
+    private string? WelcomeName;
+
     protected override async Task OnInitializedAsync()
     {
         counts = await GamesService.GetCountsByConditionAsync();
         platforms = await GamesService.GetPlatformsAsync();
         games = await GamesService.GetAllAsync();
+
+        // subscribe to cart changes so UI updates
+        // initialize cart from localStorage and subscribe to changes
+        await Cart.InitializeAsync();
+        Cart.OnChange += () => InvokeAsync(StateHasChanged);
+
+        // subscribe to current user changes and load welcome name
+        CurrentUser.OnChange += CurrentUser_OnChange;
+        await UpdateWelcomeAsync();
+    }
+
+    private async void CurrentUser_OnChange()
+    {
+        await UpdateWelcomeAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateWelcomeAsync()
+    {
+        if (CurrentUser.AccountId != null)
+        {
+            var acc = await Db.Accounts.FindAsync(CurrentUser.AccountId.Value);
+            WelcomeName = acc != null ? acc.FirstName : string.Empty;
+        }
+        else
+        {
+            WelcomeName = string.Empty;
+        }
     }
 
     private async Task OnConditionChanged(ChangeEventArgs e)
@@ -188,5 +254,20 @@ else
     {
         games = await GamesService.GetFilteredAsync(selectedCondition, selectedPlatform, selectedSort);
         StateHasChanged();
+    }
+
+    void AddToCart(Game game)
+    {
+        Cart.Add(game);
+    }
+
+    void RemoveFromCart(Game game)
+    {
+        Cart.Remove(game);
+    }
+
+    void ClearCart()
+    {
+        Cart.Clear();
     }
 }

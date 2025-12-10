@@ -1,0 +1,72 @@
+@page "/add-card"
+@using Microsoft.AspNetCore.Identity
+@using GameStore.Models
+@using GameStore.Services
+@inject CardsService CardsService
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<h3>Add Card</h3>
+
+@if (userId == null)
+{
+    <p>Please <a href="/Identity/Account/Login">log in</a> to add a card.</p>
+}
+else
+{
+    <EditForm Model="card" OnValidSubmit="Save">
+        <div class="mb-3">
+            <label class="form-label">Cardholder name</label>
+            <InputText class="form-control" @bind-Value="card.CardholderName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Card number (last4 will be stored)</label>
+            <InputText class="form-control" @bind-Value="cardNumber" />
+        </div>
+        <div class="row">
+            <div class="col-6 mb-3">
+                <label class="form-label">Expiry month</label>
+                <InputNumber class="form-control" @bind-Value="card.ExpiryMonth" />
+            </div>
+            <div class="col-6 mb-3">
+                <label class="form-label">Expiry year</label>
+                <InputNumber class="form-control" @bind-Value="card.ExpiryYear" />
+            </div>
+        </div>
+
+        <button class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    string? userId;
+    Card card = new();
+    string cardNumber = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                card.UserId = userId;
+            }
+        }
+    }
+
+    async Task Save()
+    {
+        // Store only last 4
+        if (!string.IsNullOrEmpty(cardNumber) && cardNumber.Length >= 4)
+        {
+            card.Last4 = cardNumber.Substring(cardNumber.Length - 4);
+        }
+
+        await CardsService.AddAsync(card);
+        Navigation.NavigateTo("/manage-cards");
+    }
+}

@@ -1,0 +1,84 @@
+@page "/manage-cards"
+@using Microsoft.AspNetCore.Identity
+@using GameStore.Models
+@using GameStore.Services
+@inject CardsService CardsService
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<h3>Manage Cards</h3>
+
+@if (userId == null)
+{
+    <p>Please <a href="/Identity/Account/Login">log in</a> to manage cards.</p>
+}
+else
+{
+    <button class="btn btn-primary mb-3" @onclick="GoToAdd">Add card</button>
+
+    @if (cards == null)
+    {
+        <p>Loading...</p>
+    }
+    else if (!cards.Any())
+    {
+        <p>No cards saved.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var c in cards)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">@c.CardholderName</div>
+                        <div class="text-muted">**** **** **** @c.Last4 — @c.ExpiryMonth/@c.ExpiryYear</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-danger me-2" @onclick="() => Delete(c.Id)">Delete</button>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => MakeDefault(c.Id)">Make default</button>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    string? userId;
+    List<Card>? cards;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                cards = await CardsService.GetForUserAsync(userId);
+            }
+        }
+    }
+
+    void GoToAdd() => Navigation.NavigateTo("/add-card");
+
+    async Task Delete(int id)
+    {
+        await CardsService.DeleteAsync(id);
+        if (userId != null) cards = await CardsService.GetForUserAsync(userId);
+    }
+
+    async Task MakeDefault(int id)
+    {
+        if (cards == null) return;
+        foreach (var c in cards) c.IsDefault = c.Id == id;
+        foreach (var c in cards)
+        {
+            await CardsService.UpdateAsync(c);
+        }
+        cards = await CardsService.GetForUserAsync(userId!);
+    }
+}

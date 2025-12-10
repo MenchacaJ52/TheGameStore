@@ -1,0 +1,131 @@
+@page "/checkout"
+@using GameStore.Models
+@using GameStore.Services
+@using GameStore.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@inject CartService Cart
+@inject GamesService GamesService
+@inject CardsService CardsService
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<h3>Checkout</h3>
+
+<div class="row">
+    <div class="col-8">
+        <h4>Review order</h4>
+        @if (Cart.Items.Count == 0)
+        {
+            <p>Your cart is empty.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+                @foreach (var item in Cart.Items)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">@item.Title</div>
+                            <div class="text-muted">@item.Platform — @item.Condition</div>
+                        </div>
+                        <div class="text-end">
+                            <div>@item.Price.ToString("C")</div>
+                            <button class="btn btn-sm btn-danger mt-2" @onclick="() => RemoveFromCart(item)">Remove</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input class="form-control" @bind="Name" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Address</label>
+                <textarea class="form-control" @bind="Address"></textarea>
+            </div>
+
+            @if (userId != null)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Use saved card</label>
+                    <select class="form-select" @bind="selectedCardId">
+                        <option value="">(none)</option>
+                        @if (savedCards != null)
+                        {
+                            @foreach (var c in savedCards)
+                            {
+                                <option value="@c.Id">**** **** **** @c.Last4 (@c.CardholderName)</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div>
+                <button class="btn btn-success" @onclick="PlaceOrder">Place order — @Cart.Total.ToString("C")</button>
+            </div>
+        }
+    </div>
+
+    <div class="col-4">
+        <h5>Summary</h5>
+        <p>Items: @Cart.Items.Count</p>
+        <p>Total: @Cart.Total.ToString("C")</p>
+    </div>
+</div>
+
+@code {
+    string Name = string.Empty;
+    string Address = string.Empty;
+
+    string? userId;
+    List<Card>? savedCards;
+    int? selectedCardId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cart.InitializeAsync();
+        Cart.OnChange += () => InvokeAsync(StateHasChanged);
+
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            // try to load cards by user id (identity) or by linked account if exists
+            if (userId != null)
+            {
+                savedCards = await CardsService.GetForUserAsync(userId);
+            }
+        }
+    }
+
+    void RemoveFromCart(Game g)
+    {
+        Cart.Remove(g);
+    }
+
+    private async Task PlaceOrder()
+    {
+        // remove sold items from the database by id
+        var ids = Cart.Items.Select(i => i.Id).ToList();
+        if (ids.Any())
+        {
+            await GamesService.RemoveGamesByIdAsync(ids);
+        }
+
+        // optionally link order to account/card in a real app
+        if (selectedCardId != null)
+        {
+            var card = await CardsService.GetByIdAsync(selectedCardId.Value);
+            // placeholder: you would use card token to charge
+        }
+
+        // clear cart and reset form
+        Cart.Clear();
+        Name = string.Empty;
+        Address = string.Empty;
+    }
+}

@@ -1,0 +1,81 @@
+@page "/"
+@using GameStore.Models
+@using GameStore.Data
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
+@inject ApplicationDbContext Db
+@inject NavigationManager Navigation
+@inject GameStore.Services.CurrentUserService CurrentUser
+@rendermode InteractiveServer
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <div class="alert alert-danger">@Error</div>
+}
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label class="form-label">Username or Email</label>
+        <InputText class="form-control" @bind-Value="loginModel.UsernameOrEmail" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText type="password" class="form-control" @bind-Value="loginModel.Password" />
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary">Login</button>
+        <a class="btn btn-secondary" href="/create-account">Create account</a>
+    </div>
+</EditForm>
+
+@code {
+    LoginModel loginModel = new();
+
+    string Error = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CurrentUser.InitializeAsync();
+    }
+
+    private async Task HandleLogin()
+    {
+        Error = string.Empty;
+        var account = await Db.Accounts
+            .FirstOrDefaultAsync(a => a.Username == loginModel.UsernameOrEmail || a.Email == loginModel.UsernameOrEmail);
+
+        if (account == null)
+        {
+            Error = "Account not found.";
+            return;
+        }
+
+        if (account.Password == loginModel.Password)
+        {
+            // mark local CurrentUserService as signed in and persist in session storage
+            await CurrentUser.SignInAsync(account.Id);
+            // navigate to home
+            Navigation.NavigateTo("/home");
+        }
+        else
+        {
+            Error = "Invalid username or password.";
+        }
+    }
+
+    void GoToCreate() => Navigation.NavigateTo("/create-account");
+
+    class LoginModel
+    {
+        [Required]
+        public string UsernameOrEmail { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

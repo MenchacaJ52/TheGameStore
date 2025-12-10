@@ -1,0 +1,123 @@
+@page "/view-account"
+@using GameStore.Models
+@using GameStore.Services
+@using GameStore.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components
+@inject CardsService CardsService
+@inject NavigationManager Navigation
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthStateProvider
+@inject CurrentUserService CurrentUser
+@rendermode InteractiveServer
+
+<PageTitle>View Account</PageTitle>
+
+<h3>Your Account</h3>
+
+@if (account == null && loadingFinished)
+{
+    <p>No account found.</p>
+}
+else if (account == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">@account.FirstName @account.LastName</h5>
+            <p class="card-text"><strong>Email:</strong> @account.Email</p>
+            <p class="card-text"><strong>Address:</strong> @account.Address, @account.City, @account.State @account.ZipCode</p>
+            <p class="card-text"><strong>Store Credit:</strong> @account.StoreCredit.ToString("C")</p>
+            <button class="btn btn-secondary me-2" @onclick="Edit">Edit Account</button>
+            <button class="btn btn-primary" @onclick="ManageCards">Manage Cards</button>
+        </div>
+    </div>
+
+    <h5>Saved Cards</h5>
+    @if (cards == null)
+    {
+        <p>Loading cards...</p>
+    }
+    else if (!cards.Any())
+    {
+        <p>No saved cards.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var c in cards)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">@c.CardholderName</div>
+                        <div class="text-muted">**** **** **** @c.Last4 — @c.ExpiryMonth/@c.ExpiryYear</div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "accountId")]
+    public int? AccountIdQuery { get; set; }
+
+    Account? account;
+    List<Card>? cards;
+    bool isAuthenticated;
+    int? accountId;
+    bool loadingFinished = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // If an accountId query parameter is present, load that specific account
+        if (AccountIdQuery != null)
+        {
+            account = await Db.Accounts.FindAsync(AccountIdQuery.Value);
+            loadingFinished = true;
+            if (account != null)
+            {
+                accountId = account.Id;
+                cards = await CardsService.GetForAccountAsync(account.Id);
+            }
+            return;
+        }
+
+        // No explicit accountId provided — fall back to Identity / CurrentUser only
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        isAuthenticated = user?.Identity?.IsAuthenticated == true;
+
+        // Try to get linked Account by username/email first (if Identity provides a name)
+        if (isAuthenticated)
+        {
+            var username = user.Identity?.Name;
+            if (!string.IsNullOrEmpty(username))
+            {
+                account = await Db.Accounts.FirstOrDefaultAsync(a => a.Username == username || a.Email == username);
+            }
+        }
+
+        // If not found via Identity, check CurrentUserService (set on our simple login page)
+        if (account == null && CurrentUser.AccountId != null)
+        {
+            account = await Db.Accounts.FindAsync(CurrentUser.AccountId.Value);
+        }
+
+        // Do not fall back to the first record — leave account null if none matched
+        loadingFinished = true;
+
+        if (account != null)
+        {
+            accountId = account.Id;
+            cards = await CardsService.GetForAccountAsync(account.Id);
+        }
+    }
+
+    void Edit() => Navigation.NavigateTo($"/create-account?editId={accountId}");
+    void ManageCards() => Navigation.NavigateTo("/manage-cards");
+}

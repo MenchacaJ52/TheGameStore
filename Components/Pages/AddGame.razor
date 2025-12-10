@@ -1,4 +1,4 @@
-@page "/add-game"
+﻿@page "/add-game"
 @using GameStore.Models
 @using GameStore.Services
 @inject GamesService GamesService
@@ -62,6 +62,6 @@
     private async Task Save()
     {
         await GamesService.AddGameAsync(Game);
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("/home");
     }
 }
